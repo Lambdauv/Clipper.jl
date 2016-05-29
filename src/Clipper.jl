@@ -1,3 +1,4 @@
+__precompile__()
 module Clipper
     export PolyType, PolyTypeSubject, PolyTypeClip,
            ClipType, ClipTypeIntersection, ClipTypeUnion, ClipTypeDifference, ClipTypeXor,
@@ -5,7 +6,7 @@ module Clipper
            JoinType, JoinTypeSquare, JoinTypeRound, JoinTypeMiter,
            EndType, EndTypeClosedPolygon, EndTypeClosedLine, EndTypeOpenSquare, EndTypeOpenRound, EndTypeOpenButt,
            Clip, add_path!, add_paths!, execute, clear!, get_bounds,
-           IntPoint, IntRect, orientation, area,
+           IntPoint, IntRect, orientation, area, pointinpolygon,
            ClipperOffset
 
     @enum PolyType PolyTypeSubject=0 PolyTypeClip=1
@@ -19,7 +20,7 @@ module Clipper
     @enum EndType EndTypeClosedPolygon=0 EndTypeClosedLine=1 EndTypeOpenSquare=2 EndTypeOpenRound=3 EndTypeOpenButt=4
 
     @windows_only begin
-      const library_path = joinpath(dirname(@__FILE__), "cclipper.dll")
+        const library_path = joinpath(dirname(@__FILE__), "cclipper.dll")
     end
 
     @unix_only begin
@@ -50,16 +51,22 @@ module Clipper
   	#==============================================================#
     function orientation(path::Vector{IntPoint})
         ccall((:orientation, library_path), Cuchar, (Ptr{IntPoint}, Csize_t),
-              path,
-              length(path)) == 1 ? true : false
+            path,
+            length(path)) == 1 ? true : false
     end
 
     function area(path::Vector{IntPoint})
-      ccall((:area, library_path), Float64, (Ptr{IntPoint}, Csize_t),
+        ccall((:area, library_path), Float64, (Ptr{IntPoint}, Csize_t),
             path,
             length(path))
     end
 
+    function pointinpolygon(pt::IntPoint, path::Vector{IntPoint})
+        ccall((:pointinpolygon, library_path), Cint, (IntPoint, Ptr{IntPoint}, Csize_t),
+            pt,
+            path,
+            length(path))
+    end
 
     #==============================================================#
   	# Clipper object

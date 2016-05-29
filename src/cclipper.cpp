@@ -40,6 +40,17 @@ extern "C" {
 		return ClipperLib::Area(v);
 	}
 
+    DLL_PUBLIC int CDECL pointinpolygon(ClipperLib::IntPoint pt,
+        ClipperLib::IntPoint *path, size_t count) {
+
+        ClipperLib::Path v = ClipperLib::Path();
+        for(size_t i = 0; i < count; i++) {
+            v.emplace(v.end(), path[i].X, path[i].Y);
+        }
+
+        return ClipperLib::PointInPolygon(pt, v);
+    }
+
 	//==============================================================
 	// Clipper object
 	//==============================================================
