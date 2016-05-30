@@ -1,5 +1,6 @@
 __precompile__()
 module Clipper
+import Base.convert
 export PolyType, PolyTypeSubject, PolyTypeClip,
        ClipType, ClipTypeIntersection, ClipTypeUnion, ClipTypeDifference, ClipTypeXor,
        PolyFillType, PolyFillTypeEvenOdd, PolyFillTypeNonZero, PolyFillTypePositive, PolyFillTypeNegative,
@@ -32,19 +33,26 @@ immutable IntPoint
     Y::Int64
 end
 
-type PolyNode
-    v::Vector{IntPoint}
+type PolyNode{T}
+    v::Vector{T}
     hole::Bool
-    children::Vector{PolyNode}
+    children::Vector{PolyNode{T}}
+    PolyNode() = new()
     PolyNode(a,b,c) = new(a,b,c)
-    PolyNode() = new(IntPoint[], false, PolyNode[])
 end
+PolyNode() = PolyNode{IntPoint}(IntPoint[], false, PolyNode{IntPoint}[])
+convert{S,T}(::Type{PolyNode{S}}, x::PolyNode{T}) =
+    PolyNode{S}(convert(Vector{S}, x.v), x.hole, convert(Vector{PolyNode{S}}, x.children))
 
-type PolyTree
-    children::Vector{PolyNode}
-    PolyTree(v) = new(v)
-    PolyTree() = new(PolyNode[])
+type PolyTree{T}
+    children::Vector{PolyNode{T}}
+    PolyTree() = new(PolyNode{T}[])
+    PolyTree(x) = new(x)
 end
+PolyTree() = PolyTree{IntPoint}(PolyNode{IntPoint}[])
+PolyTree{T}(x::Vector{PolyNode{T}}) = PolyTree{T}(x)
+convert{S,T}(::Type{PolyTree{S}}, x::PolyTree{T}) =
+    PolyTree{S}([PolyNode{S}(y) for y in x.children])
 
 function Base.show(io::IO, point::IntPoint)
   print(io, "[$(point.X),$(point.Y)]")
@@ -147,7 +155,8 @@ function execute(c::Clip, clipType::ClipType, subjFillType::PolyFillType, clipFi
     return result == 1 ? true : false, polys
 end
 
-function execute_pt(c::Clip, clipType::ClipType, subjFillType::PolyFillType, clipFillType::PolyFillType)
+function execute_pt(c::Clip, clipType::ClipType,
+        subjFillType::PolyFillType, clipFillType::PolyFillType)
     pt = PolyTree()
 
     result = ccall((:execute_pt, library_path), Cuchar,
