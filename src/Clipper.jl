@@ -52,7 +52,7 @@ end
 PolyTree() = PolyTree{IntPoint}(PolyNode{IntPoint}[])
 PolyTree{T}(x::Vector{PolyNode{T}}) = PolyTree{T}(x)
 convert{S,T}(::Type{PolyTree{S}}, x::PolyTree{T}) =
-    PolyTree{S}([PolyNode{S}(y) for y in x.children])
+    PolyTree{S}(convert(Vector{PolyNode{S}}, x.children))
 
 function Base.show(io::IO, point::IntPoint)
   print(io, "[$(point.X),$(point.Y)]")
