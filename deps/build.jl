@@ -4,13 +4,19 @@ pkg_dir = dirname(dirname(@__FILE__))
 
 @windows_only begin
     try
-      run(`where cl.exe`)
+        run(`where cl.exe`)
     catch
-      error("ERROR: Could not find cl.exe.")
+        error("Could not find cl.exe.")
     end
 
-    path = "$(pkg_dir)\\src\\"
-    run(`cl.exe /D_USRDLL /D_WINDLL /EHsc /Fo$(path) $(path)cclipper.cpp $(path)clipper.cpp /MT /link /DLL /OUT:$(path)cclipper.dll`)
+    try
+        run(`where vcvarsall.bat`)
+    catch
+        error("Could not find vcvarsall.bat.")
+    end
+
+    # Move compilation into a batch file so we can setup environment variables.
+    run(`win.bat`)
 end
 
 @unix_only begin
